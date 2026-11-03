@@ -52,7 +52,15 @@ public class GlobalSetup
                     $"Last URL: {page.Url}\nPage errors: {(errors.Length > 0 ? errors : "(none)")}\nScreenshot: {shot}");
             }
 
-            await new CredentialsPage(page).SetNewCredentialsAsync(TestSettings.AdminEmail, TestSettings.AdminPassword);
+            try
+            {
+                await new CredentialsPage(page).SetNewCredentialsAsync(TestSettings.AdminEmail, TestSettings.AdminPassword);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException(
+                    "Changing the default admin's credentials failed.\n" + await DescribePageAsync(page, "global-setup-credentials"), ex);
+            }
 
             // Changing the e-mail invalidates the session; log in again with the new credentials.
             await page.GotoAsync("/auth/logout");
@@ -63,6 +71,29 @@ public class GlobalSetup
         Directory.CreateDirectory(Path.GetDirectoryName(TestSettings.AuthStatePath)!);
         await context.StorageStateAsync(new() { Path = TestSettings.AuthStatePath });
         await context.CloseAsync();
+    }
+
+    /// <summary>Screenshot + a text summary of what the page shows, so a setup failure in CI explains itself.</summary>
+    private static async Task<string> DescribePageAsync(IPage page, string name)
+    {
+        try
+        {
+            Directory.CreateDirectory(TestSettings.ArtifactsDir);
+            var shot = Path.Combine(TestSettings.ArtifactsDir, $"{name}.png");
+            await page.ScreenshotAsync(new() { Path = shot, FullPage = true });
+
+            var inputs = await page.EvaluateAsync<string>(
+                "() => [...document.querySelectorAll('input,textarea,button')].map(e => `${e.tagName}[type=${e.type}][placeholder=${e.placeholder ?? ''}][disabled=${e.disabled}] ${(e.innerText||'').trim()}`).join('\\n')");
+            var text = await page.EvaluateAsync<string>("() => document.body.innerText");
+            var errorUi = await page.Locator("#blazor-error-ui").IsVisibleAsync();
+
+            return $"URL: {page.Url}\nBlazor error UI visible: {errorUi}\nScreenshot: {shot}\n" +
+                   $"--- form elements ---\n{inputs}\n--- page text (first 1500 chars) ---\n{text[..Math.Min(1500, text.Length)]}";
+        }
+        catch (Exception ex)
+        {
+            return $"(could not describe page: {ex.Message})";
+        }
     }
 
     [OneTimeTearDown]
