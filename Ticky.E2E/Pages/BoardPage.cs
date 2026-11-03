@@ -54,9 +54,14 @@ public class BoardPage(IPage page)
     public async Task AddCardAsync(string columnName, string cardName)
     {
         var form = Column(columnName).Locator(".new-card-form");
-        await NewCardButton(columnName).ClickUntilVisibleAsync(form.Locator("textarea"));
+        var textarea = form.Locator("textarea");
 
-        await form.Locator("textarea").FillAsync(cardName);
+        // After a card is created Ticky keeps the "Create new card" form open for the next one,
+        // so only click "New card" when the form isn't already there.
+        if (!await textarea.IsVisibleAsync())
+            await NewCardButton(columnName).ClickUntilVisibleAsync(textarea);
+
+        await textarea.FillAsync(cardName);
         await form.GetByRole(AriaRole.Button, new() { Name = "Create" }).ClickAsync();
 
         await Expect(CardInColumn(columnName, cardName)).ToBeVisibleAsync();

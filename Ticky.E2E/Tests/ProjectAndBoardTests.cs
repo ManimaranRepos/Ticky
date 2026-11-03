@@ -63,6 +63,7 @@ public class ProjectAndBoardTests : TickyTest
         await Expect(board.NewColumnButton).ToBeVisibleAsync();
 
         await home.GotoAsync();
-        await Expect(Page.GetByRole(AriaRole.Link, new() { Name = "Recent board" })).ToBeVisibleAsync();
+        // The nav menu has its own "Recent board" link too; check the one on the home page itself.
+        await Expect(Page.Locator("main").GetByRole(AriaRole.Link, new() { Name = "Recent board" })).ToBeVisibleAsync();
     }
 }
