@@ -8,7 +8,7 @@
     <BrowserName>chromium</BrowserName>
     <ExpectTimeout>10000</ExpectTimeout>
     <LaunchOptions>
-      <!-- Override with:  dotnet test -- Playwright.LaunchOptions.Headless=false -->
+      <!-- Set to false to watch the browser (or pass Playwright.LaunchOptions.Headless=false after the double dash on the dotnet test command line). -->
       <Headless>true</Headless>
     </LaunchOptions>
   </Playwright>

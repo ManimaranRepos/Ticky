@@ -15,7 +15,8 @@ public class LoginPage(IPage page)
     {
         await Email.FillAsync(email);
         await Password.FillAsync(password);
-        await SubmitButton.ClickAsync();
+        // The form posts back to the server: wait for that round trip, not just for the click.
+        await page.RunAndWaitForNavigationAsync(() => SubmitButton.ClickAsync(), new() { Timeout = 15000 });
         await page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
     }
 
@@ -24,6 +25,17 @@ public class LoginPage(IPage page)
     {
         await GotoAsync();
         await SubmitAsync(email, password);
-        return !page.Url.Contains("/auth/login", StringComparison.OrdinalIgnoreCase);
+
+        // Success = the server redirected us away from the login page; failure = it re-rendered it with an error.
+        try
+        {
+            await page.WaitForURLAsync(url => !url.Contains("/auth/login", StringComparison.OrdinalIgnoreCase),
+                new() { Timeout = 5000 });
+            return true;
+        }
+        catch (TimeoutException)
+        {
+            return false;
+        }
     }
 }
