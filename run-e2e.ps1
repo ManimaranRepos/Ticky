@@ -19,7 +19,8 @@ param(
     [switch]$SkipInstall
 )
 
-$ErrorActionPreference = 'Stop'
+# Windows PowerShell 5.1 turns native stderr into errors under 'Stop'; exit codes are checked explicitly instead.
+$ErrorActionPreference = 'Continue'
 Set-Location -Path $PSScriptRoot
 
 function Step($msg) { Write-Host "`n==> $msg" -ForegroundColor Cyan }
