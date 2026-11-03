@@ -1,0 +1,84 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "db: start MySQL (docker)",
+      "type": "shell",
+      "command": "docker compose -f docker-compose.e2e.yml up -d --wait",
+      "problemMatcher": []
+    },
+    {
+      "label": "db: stop MySQL (docker)",
+      "type": "shell",
+      "command": "docker compose -f docker-compose.e2e.yml down",
+      "problemMatcher": []
+    },
+    {
+      "label": "build",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["build", "Ticky.sln"],
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "build-release",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["build", "Ticky.Web/Ticky.Web.csproj", "-c", "Release"],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "app: run Ticky (http://localhost:8080)",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["run", "-c", "Release", "--project", "Ticky.Web/Ticky.Web.csproj", "--no-launch-profile"],
+      "options": {
+        "env": {
+          "ASPNETCORE_ENVIRONMENT": "Development",
+          "DB_HOST": "localhost",
+          "DB_NAME": "ticky_e2e",
+          "DB_USERNAME": "ticky",
+          "DB_PASSWORD": "ticky_e2e_pw",
+          "SMTP_ENABLED": "false",
+          "FULLY_OFFLINE": "true",
+          "BASE_URL": "http://localhost:8080"
+        }
+      },
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": { "regexp": "^__never_matches__$" },
+        "background": { "activeBegin": ".", "beginsPattern": "Building", "endsPattern": "Application started" }
+      }
+    },
+    {
+      "label": "e2e: install Playwright browsers",
+      "type": "shell",
+      "command": "dotnet build Ticky.E2E && pwsh Ticky.E2E/bin/Debug/net10.0/playwright.ps1 install --with-deps chromium",
+      "problemMatcher": []
+    },
+    {
+      "label": "e2e: run tests (headless)",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["test", "Ticky.E2E/Ticky.E2E.csproj", "--logger", "console;verbosity=normal"],
+      "group": { "kind": "test", "isDefault": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "e2e: run tests (watch the browser)",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["test", "Ticky.E2E/Ticky.E2E.csproj", "--logger", "console;verbosity=normal", "--", "Playwright.LaunchOptions.Headless=false", "Playwright.LaunchOptions.SlowMo=300", "NUnit.NumberOfTestWorkers=1"],
+      "options": { "env": { "PWDEBUG": "0" } },
+      "problemMatcher": []
+    },
+    {
+      "label": "unit: run existing unit tests",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["test", "Ticky.Units/Ticky.Units.csproj"],
+      "problemMatcher": []
+    }
+  ]
+}

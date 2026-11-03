@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <NUnit>
+    <!-- Blazor Server keeps one circuit per tab; 2 workers is a safe default for a laptop. -->
+    <NumberOfTestWorkers>2</NumberOfTestWorkers>
+  </NUnit>
+  <Playwright>
+    <BrowserName>chromium</BrowserName>
+    <ExpectTimeout>10000</ExpectTimeout>
+    <LaunchOptions>
+      <!-- Override with:  dotnet test -- Playwright.LaunchOptions.Headless=false -->
+      <Headless>true</Headless>
+    </LaunchOptions>
+  </Playwright>
+</RunSettings>

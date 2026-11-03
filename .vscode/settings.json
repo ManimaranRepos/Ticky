@@ -1,3 +1,5 @@
 {
-  "kiroAgent.configureMCP": "Disabled"
+  "kiroAgent.configureMCP": "Disabled",
+  "dotnet.defaultSolution": "Ticky.sln",
+  "dotnet.unitTests.runSettingsPath": "Ticky.E2E/e2e.runsettings"
 }
