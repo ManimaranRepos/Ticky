@@ -1,0 +1,21 @@
+# MySQL for running Ticky locally and for the Playwright E2E suite.
+#   docker compose -f docker-compose.e2e.yml up -d
+# Matches the defaults in Ticky.E2E/Infrastructure/TestSettings.cs.
+services:
+  ticky-e2e-db:
+    image: mysql:8
+    container_name: ticky-e2e-db
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: ticky_e2e
+      MYSQL_USER: ticky
+      MYSQL_PASSWORD: ticky_e2e_pw
+      MYSQL_ROOT_PASSWORD: ticky_e2e_root
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+    tmpfs:
+      - /var/lib/mysql   # throwaway data: every `up` starts from an empty database

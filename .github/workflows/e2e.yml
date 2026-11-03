@@ -1,0 +1,54 @@
+name: E2E tests (Playwright)
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_DATABASE: ticky_e2e
+          MYSQL_USER: ticky
+          MYSQL_PASSWORD: ticky_e2e_pw
+          MYSQL_ROOT_PASSWORD: ticky_e2e_root
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=5s --health-timeout=3s --health-retries=30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10
+
+      - name: Build
+        run: |
+          dotnet build Ticky.Web/Ticky.Web.csproj -c Release
+          dotnet build Ticky.E2E/Ticky.E2E.csproj
+
+      - name: Install Playwright browser
+        run: pwsh Ticky.E2E/bin/Debug/net10.0/playwright.ps1 install --with-deps chromium
+
+      # The suite starts Ticky itself (Release, :8080) against the MySQL service above.
+      - name: Run E2E tests
+        run: dotnet test Ticky.E2E/Ticky.E2E.csproj --no-build --logger "trx;LogFileName=e2e.trx" --logger "console;verbosity=normal"
+
+      - name: Upload traces and screenshots of failed tests
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts
+          path: |
+            Ticky.E2E/bin/Debug/net10.0/playwright-artifacts/
+            Ticky.E2E/TestResults/
+          retention-days: 7

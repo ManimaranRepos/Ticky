@@ -1,0 +1,29 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Ticky.Web (Release, :8080)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-release",
+      "program": "${workspaceFolder}/Ticky.Web/bin/Release/net10.0/Ticky.Web.dll",
+      "cwd": "${workspaceFolder}/Ticky.Web",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "DB_HOST": "localhost",
+        "DB_NAME": "ticky_e2e",
+        "DB_USERNAME": "ticky",
+        "DB_PASSWORD": "ticky_e2e_pw",
+        "SMTP_ENABLED": "false",
+        "FULLY_OFFLINE": "true",
+        "BASE_URL": "http://localhost:8080"
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "Now listening on:\\s+(https?://\\S+)",
+        "uriFormat": "http://localhost:8080"
+      },
+      "justMyCode": true
+    }
+  ]
+}

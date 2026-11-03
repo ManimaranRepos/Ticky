@@ -39,4 +39,5 @@ jobs:
         run: dotnet build -c Release --no-restore
 
       - name: Test
-        run: dotnet test -c Release --no-build
+        # Unit tests only - the Playwright suite needs MySQL + a browser and runs in e2e.yml.
+        run: dotnet test Ticky.Units/Ticky.Units.csproj -c Release --no-build
