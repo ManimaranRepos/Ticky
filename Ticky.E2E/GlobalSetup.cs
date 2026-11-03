@@ -40,8 +40,17 @@ public class GlobalSetup
         // Re-run against the same database: the e2e admin already exists.
         if (!await login.TryLoginAsync(TestSettings.AdminEmail, TestSettings.AdminPassword))
         {
-            Assert.That(await login.TryLoginAsync(TestSettings.DefaultAdminEmail, TestSettings.DefaultAdminPassword), Is.True,
-                "Could neither log in with the e2e admin nor with Ticky's default admin. Use an empty database.");
+            if (!await login.TryLoginAsync(TestSettings.DefaultAdminEmail, TestSettings.DefaultAdminPassword))
+            {
+                Directory.CreateDirectory(TestSettings.ArtifactsDir);
+                var shot = Path.Combine(TestSettings.ArtifactsDir, "global-setup-login.png");
+                await page.ScreenshotAsync(new() { Path = shot, FullPage = true });
+                var errors = string.Join(" | ", await page.Locator(".field-validation-error, .validation-summary-errors").AllInnerTextsAsync());
+                Assert.Fail(
+                    $"Could neither log in with {TestSettings.AdminEmail} nor with Ticky's default {TestSettings.DefaultAdminEmail}. " +
+                    $"The admin login in this database was probably changed by hand - start from an empty database (run RUN-ME.cmd again).\n" +
+                    $"Last URL: {page.Url}\nPage errors: {(errors.Length > 0 ? errors : "(none)")}\nScreenshot: {shot}");
+            }
 
             await new CredentialsPage(page).SetNewCredentialsAsync(TestSettings.AdminEmail, TestSettings.AdminPassword);
 
