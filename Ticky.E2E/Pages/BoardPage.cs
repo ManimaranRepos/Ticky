@@ -67,6 +67,41 @@ public class BoardPage(IPage page)
         await Expect(CardInColumn(columnName, cardName)).ToBeVisibleAsync();
     }
 
+    /// <summary>A label chip (div.label) inside some container, matched by its text.</summary>
+    public static ILocator LabelChip(ILocator container, string labelName) =>
+        container.Locator(".label").Filter(new() { HasTextString = labelName });
+
+    /// <summary>Opens the "Edit an existing task" details window for a card.</summary>
+    public async Task OpenCardAsync(string cardName)
+    {
+        await Card(cardName).Locator("h5").ClickUntilVisibleAsync(Dialog);
+        await Expect(Dialog.GetByTitle("Edit labels")).ToBeVisibleAsync();
+    }
+
+    /// <summary>
+    /// In the open card window: "Edit labels" opens a small "Labels" popup (outside the dialog element)
+    /// listing the board's labels; clicking one toggles it and shows a check mark.
+    /// </summary>
+    public async Task AddLabelToOpenCardAsync(string labelName)
+    {
+        var picker = page.Locator(".dropdown").Filter(new() { Has = page.Locator("h5", new() { HasTextString = "Labels" }) });
+        var option = picker.Locator(".priority-selector-item").Filter(new() { HasTextString = labelName });
+
+        await Dialog.GetByTitle("Edit labels").ClickUntilVisibleAsync(option);
+        await option.ClickAsync();
+        await Expect(option.Locator("[title='Selected']")).ToBeVisibleAsync();
+
+        // Close the popup again with its own "Cancel" (x) button.
+        await picker.GetByTitle("Cancel").ClickAsync();
+    }
+
+    /// <summary>Closes the card details window with its "x" icon.</summary>
+    public async Task CloseCardAsync()
+    {
+        await Dialog.Locator("[title='Close']").First.ClickAsync();
+        await Expect(Dialog).ToBeHiddenAsync();
+    }
+
     public Task DragCardAsync(string cardName, string targetColumn) =>
         page.SortableDragAsync(Card(cardName).Locator("h5"), CardList(targetColumn));
 }

@@ -3,7 +3,7 @@ name: E2E tests (Playwright)
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: ['**']   # every branch, so new tests are checked before they reach main
   workflow_dispatch:
 
 jobs:
