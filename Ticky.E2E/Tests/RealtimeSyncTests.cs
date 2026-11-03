@@ -24,6 +24,9 @@ public class RealtimeSyncTests : TickyTest
         await secondPage.GotoAsync(Page.Url);
         var second = new BoardPage(secondPage);
         await second.WaitUntilReadyAsync();
+        // BoardView joins the board's SignalR group only after its first render; give it a moment,
+        // otherwise a change made right away is sent before this copy is listening.
+        await secondPage.WaitForTimeoutAsync(2000);
         await Expect(second.Column("Inbox")).ToBeVisibleAsync();
 
         await first.AddCardAsync("Inbox", "Pushed over SignalR");
@@ -45,6 +48,9 @@ public class RealtimeSyncTests : TickyTest
         await secondPage.GotoAsync(Page.Url);
         var second = new BoardPage(secondPage);
         await second.WaitUntilReadyAsync();
+        // BoardView joins the board's SignalR group only after its first render; give it a moment,
+        // otherwise a change made right away is sent before this copy is listening.
+        await secondPage.WaitForTimeoutAsync(2000);
         await Expect(second.CardInColumn("Ready", "Review me")).ToBeVisibleAsync();
 
         await first.DragCardAsync("Review me", "Review");

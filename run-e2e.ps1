@@ -51,6 +51,13 @@ if (-not $SkipInstall) {
     else { Write-Host 'VS Code: OK' }
 }
 
+# ---------------------------------------------------------------- stop an old Ticky
+# A Ticky left running from an earlier run would keep using the old database and port 8080.
+Get-Process -Name 'Ticky.Web' -ErrorAction SilentlyContinue | ForEach-Object {
+    Write-Host "Stopping an old Ticky (process $($_.Id))"
+    Stop-Process -Id $_.Id -Force
+}
+
 # ---------------------------------------------------------------- database
 Step 'Starting MySQL 8 (Docker, throwaway data)'
 docker info *> $null
