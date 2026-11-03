@@ -52,6 +52,28 @@ public class CardWorkflowTests : TickyTest
     }
 
     [Test]
+    public async Task Label_added_in_card_details_shows_on_the_board_and_is_saved()
+    {
+        // Arrange: a card on a fresh board (every new board starts with Bug / Feature / Enhancement labels).
+        await _board.AddColumnAsync("Backlog");
+        await _board.AddCardAsync("Backlog", "Card with a label");
+
+        // Act: open the card and pick the "Bug" label.
+        await _board.OpenCardAsync("Card with a label");
+        await _board.AddLabelToOpenCardAsync("Bug");
+
+        // Assert 1: the details window lists the label.
+        await Expect(BoardPage.LabelChip(_board.Dialog, "Bug")).ToBeVisibleAsync();
+
+        await _board.CloseCardAsync();
+
+        // Assert 2: after a reload (so it really came from the database) the card on the board shows it.
+        await Page.ReloadAsync();
+        await _board.WaitUntilReadyAsync();
+        await Expect(BoardPage.LabelChip(_board.CardInColumn("Backlog", "Card with a label"), "Bug")).ToBeVisibleAsync();
+    }
+
+    [Test]
     public async Task Clicking_a_card_opens_its_details()
     {
         await _board.AddColumnAsync("Ideas");
