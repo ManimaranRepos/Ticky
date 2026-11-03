@@ -33,6 +33,7 @@ public class GlobalSetup
         using var playwright = await Playwright.CreateAsync();
         await using var browser = await playwright.Chromium.LaunchAsync();
         var context = await browser.NewContextAsync(new() { BaseURL = TestSettings.BaseUrl });
+        await context.AddBlazorProbeAsync();
         var page = await context.NewPageAsync();
         var login = new LoginPage(page);
 

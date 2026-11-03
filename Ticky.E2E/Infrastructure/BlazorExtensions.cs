@@ -39,9 +39,41 @@ public static class BlazorExtensions
         await input.DispatchEventAsync("change");
     }
 
-    /// <summary>Waits until the Blazor circuit script has started.</summary>
-    public static Task WaitForBlazorAsync(this IPage page) =>
-        page.WaitForFunctionAsync("() => window.Blazor !== undefined && document.readyState === 'complete'");
+    /// <summary>
+    /// Init script (add with <see cref="AddBlazorProbeAsync"/>) that counts messages on Blazor's SignalR
+    /// WebSocket. Until the circuit has exchanged messages, the page is only prerendered HTML: a form
+    /// submitted then is a plain POST that ASP.NET rejects with "A valid antiforgery token was not provided".
+    /// </summary>
+    public const string CircuitProbeScript = """
+        (() => {
+          const Native = window.WebSocket;
+          if (!Native || Native.__tickyProbe) return;
+          class ProbedWebSocket extends Native {
+            constructor(url, protocols) {
+              super(url, protocols);
+              if (String(url).includes('_blazor')) {
+                window.__blazorMessages = 0;
+                this.addEventListener('message', () => { window.__blazorMessages = (window.__blazorMessages || 0) + 1; });
+              }
+            }
+          }
+          ProbedWebSocket.__tickyProbe = true;
+          window.WebSocket = ProbedWebSocket;
+        })();
+        """;
+
+    public static Task AddBlazorProbeAsync(this IBrowserContext context) => context.AddInitScriptAsync(CircuitProbeScript);
+
+    /// <summary>Waits until the Blazor Server circuit is connected and has sent its first render batch.</summary>
+    public static async Task WaitForBlazorAsync(this IPage page)
+    {
+        await page.WaitForFunctionAsync(
+            "() => window.Blazor !== undefined && document.readyState === 'complete' && (window.__blazorMessages || 0) >= 2",
+            null, new() { Timeout = 30000 });
+
+        // Let the first interactive render settle (layouts re-render once the current user is loaded).
+        await page.WaitForTimeoutAsync(300);
+    }
 
     /// <summary>Fails the test if Blazor showed its "An unhandled error has occurred" bar.</summary>
     public static Task AssertNoBlazorErrorAsync(this IPage page) =>

@@ -19,6 +19,7 @@ public class RealtimeSyncTests : TickyTest
         await first.AddColumnAsync("Inbox");
 
         await using var secondContext = await Browser.NewContextAsync(ContextOptions());
+        await secondContext.AddBlazorProbeAsync();
         var secondPage = await secondContext.NewPageAsync();
         await secondPage.GotoAsync(Page.Url);
         var second = new BoardPage(secondPage);
@@ -39,6 +40,7 @@ public class RealtimeSyncTests : TickyTest
         await first.AddCardAsync("Ready", "Review me");
 
         await using var secondContext = await Browser.NewContextAsync(ContextOptions());
+        await secondContext.AddBlazorProbeAsync();
         var secondPage = await secondContext.NewPageAsync();
         await secondPage.GotoAsync(Page.Url);
         var second = new BoardPage(secondPage);

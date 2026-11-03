@@ -22,6 +22,7 @@ public abstract class TickyTest : PageTest
     [SetUp]
     public async Task StartTracing()
     {
+        await Context.AddBlazorProbeAsync();
         await Context.Tracing.StartAsync(new()
         {
             Title = TestContext.CurrentContext.Test.FullName,
